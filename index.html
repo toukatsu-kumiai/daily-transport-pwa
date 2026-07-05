@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f4c81">
+<title>日別輸送実績かんたん入力</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--b:#0f4c81;--b2:#e8f3ff;--g:#18794e;--r:#b42318;--line:#d0d5dd;--bg:#f6f8fb;--card:#fff;--txt:#101828}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--txt);font-size:18px}
+header{position:sticky;top:0;z-index:20;background:var(--b);color:#fff;padding:12px 10px;box-shadow:0 2px 8px #0003}
+header h1{font-size:22px;margin:0;text-align:center}header div{font-size:13px;text-align:center;margin-top:4px}
+main{max-width:820px;margin:auto;padding:14px 12px 96px}.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 3px 14px rgba(16,24,40,.08)}
+h2{font-size:23px;margin:0 0 12px}h3{font-size:19px;margin:16px 0 8px}.muted{font-size:15px;color:#667085;line-height:1.55}
+label{display:block;font-weight:800;margin:13px 0 6px}.req{color:var(--r);font-size:13px}
+input,select,textarea{width:100%;font-size:21px;min-height:53px;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:#fff}
+textarea{min-height:86px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.summary{background:var(--b2);border:1px solid #b7d5fb;border-radius:12px;padding:13px;line-height:1.65}.notice{background:#fff8e7;border:1px solid #f1d58a;border-radius:12px;padding:11px;font-size:15px;line-height:1.55}
+button,.btn{width:100%;min-height:55px;border:0;border-radius:13px;font-size:19px;font-weight:800;padding:11px;cursor:pointer}.primary{background:var(--b);color:#fff}.secondary{background:#eef2f6;color:#1d2939}.green{background:var(--g);color:#fff}.danger{background:#fee4e2;color:#912018}.outline{background:#fff;border:2px solid var(--b);color:var(--b)}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.section{display:none}.section.active{display:block}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 10px #0002}
+nav button{border-radius:0;background:#fff;color:#475467;font-size:13px;min-height:68px;padding:6px 2px}nav button span{display:block;font-size:24px}nav button.active{color:var(--b);background:var(--b2)}
+.record{border:1px solid var(--line);border-radius:13px;padding:13px;margin:10px 0}.record .date{font-size:20px;font-weight:900;color:var(--b)}.record .meta{font-size:15px;color:#475467;line-height:1.55}.record .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.empty{text-align:center;color:#667085;padding:25px}.hidden{display:none!important}.error{color:var(--r);font-weight:800;margin-top:9px}.pill{display:inline-block;padding:3px 8px;border-radius:99px;background:#e8f3ff;color:#0f4c81;font-size:13px;font-weight:800}
+@media(max-width:520px){.grid2,.grid3,.btnrow{grid-template-columns:1fr}.card{padding:14px}body{font-size:17px}}
+</style>
+</head>
+<body>
+<header><h1>日別輸送実績かんたん入力</h1><div>毎日の実績入力 → A4縦PDF → 担当者へメール送信用</div></header>
+<main>
+<section id="sec-input" class="section active">
+  <div class="card">
+    <h2>1日分を入力</h2>
+    <input id="editKey" type="hidden">
+    <div class="grid2">
+      <div><label>年</label><input id="year" type="number" min="2000" max="2100"></div>
+      <div><label>月</label><input id="month" type="number" min="1" max="12"></div>
+    </div>
+    <label>日付 <span class="req">必須</span></label><select id="day"></select>
+    <div class="grid2">
+      <div><label>走行粁</label><input id="runKm" type="number" inputmode="decimal" min="0" step="0.1"></div>
+      <div><label>実車粁</label><input id="actualKm" type="number" inputmode="decimal" min="0" step="0.1"></div>
+    </div>
+    <div class="grid2">
+      <div><label>回数</label><input id="trips" type="number" inputmode="numeric" min="0" step="1"></div>
+      <div><label>人員</label><input id="persons" type="number" inputmode="numeric" min="0" step="1"></div>
+    </div>
+    <label>収入</label><input id="income" type="number" inputmode="numeric" min="0" step="1">
+    <div class="grid2">
+      <div><label>燃料</label><input id="fuel" type="number" inputmode="decimal" min="0" step="0.1"></div>
+      <div><label>オイル</label><input id="oil" type="number" inputmode="decimal" min="0" step="0.1"></div>
+    </div>
+    <h3>障害者割引</h3>
+    <div class="grid3">
+      <div><label>回数</label><input id="discTrips" type="number" inputmode="numeric" min="0" step="1"></div>
+      <div><label>人数</label><input id="discPersons" type="number" inputmode="numeric" min="0" step="1"></div>
+      <div><label>額</label><input id="discAmount" type="number" inputmode="numeric" min="0" step="1"></div>
+    </div>
+    <label>備考</label><input id="remarks" list="remarksList" placeholder="候補から選ぶか直接入力">
+    <datalist id="remarksList"><option value="休車"><option value="自使（km）"></datalist>
+    <div id="calcPreview" class="summary" style="margin-top:13px"></div>
+    <div id="formError" class="error"></div>
+    <div class="btnrow"><button id="saveBtn" class="primary">この日を保存</button><button id="resetBtn" class="secondary">入力を消す</button></div>
+  </div>
+  <div class="notice">数字は空欄でも保存できます。粁収・実車率は自動計算します。</div>
+</section>
+
+<section id="sec-list" class="section">
+  <div class="card"><h2>入力済み一覧</h2><div id="listSummary" class="summary"></div><div id="records"></div></div>
+</section>
+
+<section id="sec-pdf" class="section">
+  <div class="card">
+    <h2>PDF・送信</h2>
+    <div class="grid2">
+      <div><label>対象年</label><input id="pdfYear" type="number" min="2000" max="2100"></div>
+      <div><label>対象月</label><input id="pdfMonth" type="number" min="1" max="12"></div>
+    </div>
+    <div id="pdfSummary" class="summary" style="margin-top:13px"></div>
+    <button id="pdfBtn" class="primary" style="margin-top:13px">A4縦PDFをダウンロード</button>
+    <button id="mailBtn" class="outline" style="margin-top:10px">担当者宛メールを作成</button>
+    <p class="muted">スマホの仕様上、PDFは自動添付できない場合があります。PDFをダウンロード後、開いたメールに添付してください。</p>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+    <h3>輸送実績報告書（支局提出用）</h3>
+    <label>報告対象年（3月終了年）</label><input id="annualEndYear" type="number" min="2000" max="2100">
+    <div id="annualSummary" class="summary" style="margin-top:13px"></div>
+    <button id="annualPdfBtn" class="green" style="margin-top:13px">輸送実績報告書PDFをダウンロード</button>
+    <button id="annualMailBtn" class="outline" style="margin-top:10px">報告書送信用メールを作成</button>
+    <p class="muted">前年4月1日から本年3月31日までの入力データを集計します。</p><p class="notice">月次PDFや年次報告書PDFを作成した後は、念のため「設定」→「バックアップ保存」をおすすめします。ブラウザのキャッシュ削除は、バックアップ確認後に必要な場合だけ行ってください。</p>
+  </div>
+</section>
+
+<section id="sec-settings" class="section">
+  <div class="card">
+    <h2>設定</h2>
+    <label>氏名</label><input id="driverName" placeholder="氏名">
+    <div class="grid2">
+      <div><label>市名</label><input id="cityName" placeholder="例：松戸市"></div>
+      <div><label>No（組合員番号）</label><input id="memberNo" placeholder="例：123"></div>
+    </div>
+    <div class="grid3">
+      <div><label>車種</label><input id="vehicleType" placeholder="例：クラウン"></div>
+      <div><label>年式</label><input id="modelYear" placeholder="例：令和5年"></div>
+      <div><label>番号（車のナンバー）</label><input id="plateNo" placeholder="例：松戸500あ1234"></div>
+    </div>
+    <label>担当者メールアドレス</label><input id="mailTo" type="email" placeholder="example@example.com">
+    <label>表示方法</label><select id="roundMode"><option value="1">小数点一桁</option><option value="0">四捨五入整数</option></select>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+    <h3>輸送実績報告書（支局提出用）</h3>
+    <label>事業者番号</label><input id="operatorNo" placeholder="事業者番号">
+    <label>支局名</label><input id="branchName" placeholder="例：千葉運輸支局">
+    <label>住所</label><input id="reportAddress" placeholder="住所">
+    <label>報告書用氏名</label><input id="reportName" placeholder="氏名">
+    <label>電話番号</label><input id="reportPhone" placeholder="電話番号">
+    <label>営業区域</label><input id="businessArea" placeholder="営業区域">
+    <div class="grid2">
+      <div><label>交通事故件数</label><input id="accidents" type="number" min="0" step="1" value="0"></div>
+      <div><label>重大事故件数</label><input id="seriousAccidents" type="number" min="0" step="1" value="0"></div>
+    </div>
+    <div class="grid2">
+      <div><label>死者数</label><input id="fatalities" type="number" min="0" step="1" value="0"></div>
+      <div><label>負傷者数</label><input id="injured" type="number" min="0" step="1" value="0"></div>
+    </div>
+    <button id="saveSettings" class="primary" style="margin-top:13px">設定を保存</button>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+    <div class="btnrow"><button id="backupBtn" class="outline">バックアップ保存</button><label class="btn secondary" style="display:flex;align-items:center;justify-content:center">バックアップ復元<input id="restoreInput" type="file" accept="application/json" hidden></label></div>
+  </div>
+</section>
+</main>
+
+<nav><button data-sec="input" class="active"><span>✍️</span>入力</button><button data-sec="list"><span>📋</span>一覧</button><button data-sec="pdf"><span>📄</span>PDF</button><button data-sec="settings"><span>⚙️</span>設定</button></nav>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const KEY='dailyTransportPwa_v1';
+let state={settings:{name:'',cityName:'',memberNo:'',vehicleType:'',modelYear:'',plateNo:'',mailTo:'',roundMode:'1',operatorNo:'',branchName:'',reportAddress:'',reportName:'',reportPhone:'',businessArea:'',accidents:0,seriousAccidents:0,fatalities:0,injured:0},records:{}};
+try{const raw=localStorage.getItem(KEY);if(raw){const x=JSON.parse(raw);state={...state,...x,settings:{...state.settings,...(x.settings||{})},records:x.records||{}};if(state.settings.cityNo&&!state.settings.cityName)state.settings.cityName=state.settings.cityNo}}catch(e){}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function pad(n){return String(n).padStart(2,'0')}
+function ymKey(y,m){return `${Number(y)}-${pad(Number(m))}`}
+function recKey(y,m,d){return `${ymKey(y,m)}-${pad(Number(d))}`}
+function nowY(){return new Date().getFullYear()}function nowM(){return new Date().getMonth()+1}
+function num(v){return Number(v)||0}
+function daysInMonth(y,m){return new Date(Number(y),Number(m),0).getDate()}
+function roundVal(v){if(!isFinite(v))return '';return state.settings.roundMode==='0'?String(Math.round(v)):(Math.round(v*10)/10).toFixed(1)}
+function money(v){return Math.round(num(v)).toLocaleString('ja-JP')}
+function fmtNum(v){if(v===''||v==null)return '';let n=Number(v);if(!isFinite(n)||n===0)return '';return state.settings.roundMode==='0'?String(Math.round(n)):(Math.round(n*10)/10).toFixed(1).replace(/\.0$/,'')}function fmtInt(v){let n=Number(v)||0;return n?String(Math.round(n)):''}
+function kmRevenue(r){return num(r.runKm)>0?num(r.income)/num(r.runKm):NaN}
+function actualRate(r){return num(r.runKm)>0?num(r.actualKm)/num(r.runKm)*100:NaN}
+function defaultYM(){return {y:nowY(),m:nowM()}}
+function initDays(){const sel=$('day');sel.innerHTML='';for(let i=1;i<=31;i++)sel.add(new Option(i+'日',i))}
+initDays();
+function showSec(n){document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id==='sec-'+n));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.sec===n));if(n==='list')renderList();if(n==='pdf')renderPdf();if(n==='settings')renderSettings()}
+function backupGuideMonthly(){
+  alert('PDFをダウンロードしました。\n\n提出前にPDFの内容を確認してください。\nまた、念のため月1回は「設定」→「バックアップ保存」をおすすめします。');
+}
+function backupGuideAnnual(){
+  const go=confirm('輸送実績報告書PDFをダウンロードしました。\n\n1年分の区切りです。まず「設定」→「バックアップ保存」でバックアップを残してください。\n\nブラウザのキャッシュ削除は、入力データも消える可能性があります。PDFとバックアップを確認した後、必要な場合だけ行ってください。\n\nOKを押すと設定画面へ移動します。');
+  if(go)showSec('settings');
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showSec(b.dataset.sec));
+function setDefaults(){const {y,m}=defaultYM();$('year').value=y;$('month').value=m;$('pdfYear').value=y;$('pdfMonth').value=m;$('annualEndYear').value=(m<=3?y:y+1);const d=new Date().getDate();$('day').value=Math.min(d,daysInMonth(y,m))}
+function getFormRecord(){return{year:num($('year').value),month:num($('month').value),day:num($('day').value),runKm:num($('runKm').value),actualKm:num($('actualKm').value),trips:num($('trips').value),persons:num($('persons').value),income:num($('income').value),fuel:num($('fuel').value),oil:num($('oil').value),discTrips:num($('discTrips').value),discPersons:num($('discPersons').value),discAmount:num($('discAmount').value),remarks:$('remarks').value.trim()}}
+function fillForm(r){$('year').value=r.year;$('month').value=r.month;$('day').value=r.day;['runKm','actualKm','trips','persons','income','fuel','oil','discTrips','discPersons','discAmount','remarks'].forEach(k=>$(k).value=r[k]??'');updatePreview()}
+function clearForm(){['runKm','actualKm','trips','persons','income','fuel','oil','discTrips','discPersons','discAmount','remarks','editKey'].forEach(id=>$(id).value='');$('formError').textContent='';updatePreview()}
+function updatePreview(){const r=getFormRecord();$('calcPreview').innerHTML=`粁収：<strong>${roundVal(kmRevenue(r))||'-'}</strong>　実車率：<strong>${roundVal(actualRate(r))||'-'}%</strong><br>収入：<strong>${money(r.income)}円</strong>　障害者割引額：<strong>${money(r.discAmount)}円</strong>`}
+['year','month','day','runKm','actualKm','trips','persons','income','fuel','oil','discTrips','discPersons','discAmount','remarks'].forEach(id=>$(id).addEventListener('input',updatePreview));
+$('resetBtn').onclick=clearForm;
+$('saveBtn').onclick=()=>{const r=getFormRecord();$('formError').textContent='';if(!r.year||!r.month||!r.day){$('formError').textContent='年・月・日を入力してください。';return}if(r.day>daysInMonth(r.year,r.month)){$('formError').textContent='その月に存在しない日付です。';return}state.records[recKey(r.year,r.month,r.day)]=r;save();alert('保存しました。');renderList();showSec('list')};
+function recordsFor(y,m){const max=daysInMonth(y,m),arr=[];for(let d=1;d<=max;d++){arr.push(state.records[recKey(y,m,d)]||{year:y,month:m,day:d})}return arr}
+function nonEmpty(r){return ['runKm','actualKm','trips','persons','income','fuel','oil','discTrips','discPersons','discAmount'].some(k=>num(r[k])!==0)||String(r.remarks||'').trim()}
+function totals(arr){const keys=['runKm','actualKm','trips','persons','income','fuel','oil','discTrips','discPersons','discAmount'];const t={};keys.forEach(k=>t[k]=arr.reduce((s,r)=>s+num(r[k]),0));const work=arr.filter(nonEmpty).length||0;t.kmRevenue=t.runKm>0?t.income/t.runKm:NaN;t.actualRate=t.runKm>0?t.actualKm/t.runKm*100:NaN;t.workDays=work;return t}
+function averages(arr){const filled=arr.filter(nonEmpty),n=filled.length||0;const t=totals(filled);const a={};['runKm','actualKm','trips','persons','income','fuel','oil','discTrips','discPersons','discAmount'].forEach(k=>a[k]=n?t[k]/n:0);a.kmRevenue=t.kmRevenue;a.actualRate=t.actualRate;return a}
+function renderList(){const y=num($('year').value)||nowY(),m=num($('month').value)||nowM();const arr=recordsFor(y,m).filter(nonEmpty).sort((a,b)=>a.day-b.day);const t=totals(recordsFor(y,m));$('listSummary').innerHTML=`対象：<strong>${y}年${m}月</strong><br>入力済み：<strong>${arr.length}日分</strong>　走行粁合計：<strong>${fmtNum(t.runKm)}</strong>　収入合計：<strong>${money(t.income)}円</strong>`;$('records').innerHTML=arr.length?arr.map(r=>`<div class="record"><div class="date">${r.year}年${r.month}月${r.day}日 <span class="pill">${esc(r.remarks||'')}</span></div><div class="meta">走行${fmtNum(r.runKm)}粁／実車${fmtNum(r.actualKm)}粁／回数${r.trips||0}／人員${r.persons||0}<br>収入 ${money(r.income)}円　粁収 ${roundVal(kmRevenue(r))||'-'}　実車率 ${roundVal(actualRate(r))||'-'}%${r.remarks?'<br>備考：'+esc(r.remarks):''}</div><div class="actions"><button class="outline" onclick="editRec('${recKey(r.year,r.month,r.day)}')">修正</button><button class="danger" onclick="delRec('${recKey(r.year,r.month,r.day)}')">削除</button></div></div>`).join(''):'<div class="empty">入力済みデータはありません。</div>'}
+window.editRec=k=>{const r=state.records[k];if(!r)return;fillForm(r);showSec('input')};
+window.delRec=k=>{if(confirm('削除しますか？')){delete state.records[k];save();renderList()}};
+function renderPdf(){const y=num($('pdfYear').value)||nowY(),m=num($('pdfMonth').value)||nowM();const arr=recordsFor(y,m),filled=arr.filter(nonEmpty),t=totals(arr);$('pdfSummary').innerHTML=`対象：<strong>${y}年${m}月</strong><br>入力済み：<strong>${filled.length}日分</strong><br>走行粁合計：<strong>${fmtNum(t.runKm)}</strong>　実車粁合計：<strong>${fmtNum(t.actualKm)}</strong><br>収入合計：<strong>${money(t.income)}円</strong>`;renderAnnualSummary()}
+$('pdfYear').oninput=renderPdf;$('pdfMonth').oninput=renderPdf;$('annualEndYear').oninput=renderPdf;
+function renderSettings(){$('driverName').value=state.settings.name||'';$('cityName').value=state.settings.cityName||'';$('memberNo').value=state.settings.memberNo||'';$('vehicleType').value=state.settings.vehicleType||'';$('modelYear').value=state.settings.modelYear||'';$('plateNo').value=state.settings.plateNo||'';$('mailTo').value=state.settings.mailTo||'';$('roundMode').value=state.settings.roundMode||'1';$('operatorNo').value=state.settings.operatorNo||'';$('branchName').value=state.settings.branchName||'';$('reportAddress').value=state.settings.reportAddress||'';$('reportName').value=state.settings.reportName||state.settings.name||'';$('reportPhone').value=state.settings.reportPhone||'';$('businessArea').value=state.settings.businessArea||'';$('accidents').value=state.settings.accidents||0;$('seriousAccidents').value=state.settings.seriousAccidents||0;$('fatalities').value=state.settings.fatalities||0;$('injured').value=state.settings.injured||0}
+$('saveSettings').onclick=()=>{state.settings={name:$('driverName').value.trim(),cityName:$('cityName').value.trim(),memberNo:$('memberNo').value.trim(),vehicleType:$('vehicleType').value.trim(),modelYear:$('modelYear').value.trim(),plateNo:$('plateNo').value.trim(),mailTo:$('mailTo').value.trim(),roundMode:$('roundMode').value,operatorNo:$('operatorNo').value.trim(),branchName:$('branchName').value.trim(),reportAddress:$('reportAddress').value.trim(),reportName:$('reportName').value.trim(),reportPhone:$('reportPhone').value.trim(),businessArea:$('businessArea').value.trim(),accidents:num($('accidents').value),seriousAccidents:num($('seriousAccidents').value),fatalities:num($('fatalities').value),injured:num($('injured').value)};save();alert('設定を保存しました。');updatePreview();renderPdf()};
+function txt(x,s,a,b,size=18,align='left',bold=false,maxW,color='#000'){x.save();x.font=`${bold?700:400} ${size}px "Yu Gothic",Meiryo,sans-serif`;x.fillStyle=color;x.textAlign=align;x.textBaseline='middle';if(maxW){let t=String(s??'');while(t&&x.measureText(t).width>maxW)t=t.slice(0,-1);if(t!==String(s??''))t=t.slice(0,-1)+'…';x.fillText(t,a,b)}else x.fillText(String(s??''),a,b);x.restore()}
+function line(x,a,b,c,d,w=1,color='#000'){x.save();x.strokeStyle=color;x.lineWidth=w;x.beginPath();x.moveTo(a,b);x.lineTo(c,d);x.stroke();x.restore()}
+function rect(x,a,b,w,h,lw=1){x.save();x.strokeStyle='#000';x.lineWidth=lw;x.strokeRect(a,b,w,h);x.restore()}
+function make(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);return[c,x]}
+function cellTxt(x,s,a,b,w,h,size=15,align='center',bold=false){txt(x,s,a+(align==='left'?6:w/2),b+h/2,size,align,bold,w-8)}
+
+function operateDay(r){return num(r.runKm)>0||num(r.actualKm)>0||num(r.trips)>0||num(r.income)>0}
+function recordsBetween(startY,startM,endY,endM){const arr=[];let y=startY,m=startM;while(y<endY||(y===endY&&m<=endM)){arr.push(...recordsFor(y,m));m++;if(m>12){m=1;y++}}return arr}
+function annualData(endYear){const arr=recordsBetween(endYear-1,4,endYear,3),work=arr.filter(operateDay),t=totals(arr);t.workDays=work.length;t.salesThousand=Math.round(t.income/1000);t.salesPerDay=t.workDays?Math.round(t.income/t.workDays):0;t.period=`${endYear-1}年4月1日から${endYear}年3月31日まで`;return{arr,t,endYear}}
+function renderAnnualSummary(){if(!$('annualEndYear'))return;const ey=num($('annualEndYear').value)||(nowM()<=3?nowY():nowY()+1),d=annualData(ey),t=d.t;$('annualSummary').innerHTML=`対象：<strong>${ey-1}年4月1日～${ey}年3月31日</strong><br>実働日数：<strong>${t.workDays}日</strong>　走行キロ：<strong>${fmtNum(t.runKm)}</strong><br>実車キロ：<strong>${fmtNum(t.actualKm)}</strong>　営業収入：<strong>${money(t.income)}円</strong>`}
+function annualReportCanvas(endYear){const W=1240,H=1754,[c,x]=make(W,H),s=state.settings,d=annualData(endYear),t=d.t;txt(x,'第４号様式　（第２条関係）　（日本工業規格Ａ列４番）　　第２表',94,82,18,'left');rect(x,875,120,180,44,1.2);txt(x,'事 業 者 番 号',965,142,20,'center',true);txt(x,s.operatorNo||'',1170,142,18,'right',false,130);rect(x,95,205,370,44,1.2);const branchRegion=String(s.branchName||'').replace(/運輸支局$/,'').replace(/支局$/,'').trim();txt(x,`${branchRegion}　運　輸　支　局`,455,227,21,'right',true,350);txt(x,`一般乗用旅客自動車運送事業（個人タクシー） 輸送実績報告書（${endYear-1}年度）`,W/2,285,22,'center',true);txt(x,'あて',W/2,340,20,'center');txt(x,'住　　所',710,410,20,'left');txt(x,s.reportAddress||'',835,410,18,'left',false,330);txt(x,'氏　　名',710,465,20,'left');txt(x,s.reportName||s.name||'',835,465,20,'left',false,330);txt(x,'電話番号',710,520,20,'left');txt(x,s.reportPhone||'',835,520,18,'left',false,330);
+txt(x,`事業概要（　${endYear}年３月３１日現在）`,125,610,21,'left');rect(x,125,640,430,50,1.5);line(x,250,640,250,690,1.2);txt(x,'営業区域',187,665,20,'center');txt(x,s.businessArea||'',270,665,18,'left',false,260);
+txt(x,`輸送実績　（前年４月１日から本年３月３１日まで）`,125,735,21,'left');const L=125,Mid=330,Val=780,R=1000,row=50,top=770;function rowBox(i,label,val){const y=top+i*row;rect(x,L,y,R-L,row,1.2);line(x,Val,y,Val,y+row,1.2);txt(x,label,L+8,y+row/2,20,'left');txt(x,val,R-18,y+row/2,20,'right',false,R-Val-28)}
+rowBox(0,'実働日数',`${t.workDays} 日`);rowBox(1,'走行キロ　（キロメートル）',fmtNum(t.runKm));rowBox(2,'　　うち実車キロ　（キロメートル）',fmtNum(t.actualKm));rowBox(3,'　　実車率　（％）',roundVal(t.actualRate));rowBox(4,'運送回数　（回）',fmtInt(t.trips));rowBox(5,'輸送人員　（人）',fmtInt(t.persons));rowBox(6,'営業収入　（千円）',money(t.salesThousand));rowBox(7,'　　実働車１日１車あたり営業収入　（円）',money(t.salesPerDay));
+const at=top+row*8+65;txt(x,`事故件数　（前年４月１日から本年３月３１日まで）`,125,at,21,'left');function accRow(i,label,val){const y=at+25+i*row;rect(x,L,y,R-L,row,1.2);line(x,Val,y,Val,y+row,1.2);txt(x,label,L+8,y+row/2,20,'left');txt(x,`${Math.round(num(val))} 件`,R-18,y+row/2,20,'right')}accRow(0,'交通事故件数',s.accidents);accRow(1,'重大事故件数',s.seriousAccidents);const y3=at+25+2*row;rect(x,L,y3,R-L,row,1.2);line(x,Val,y3,Val,y3+row,1.2);txt(x,'死者数',L+8,y3+row/2,20,'left');txt(x,`${Math.round(num(s.fatalities))} 人`,R-18,y3+row/2,20,'right');const y4=at+25+3*row;rect(x,L,y4,R-L,row,1.2);line(x,Val,y4,Val,y4+row,1.2);txt(x,'負傷者数',L+8,y4+row/2,20,'left');txt(x,`${Math.round(num(s.injured))} 人`,R-18,y4+row/2,20,'right');
+txt(x,'備　考',125,1492,18,'left',true);txt(x,'１',260,1492,15,'left');txt(x,'交通事故とは、道路交通法（昭和23年法律第105号）第72条第１項の交通事故をいう。',310,1492,14,'left',false,820);txt(x,'２',260,1522,15,'left');txt(x,'重大事故とは、自動車事故報告規則（昭和26年運輸省令第104号）第２条の事故をいう。',310,1522,14,'left',false,820);txt(x,'３',260,1552,15,'left');txt(x,'実車率及び実働車１日１車あたり営業収入は、次の算式により算出する。',310,1552,14,'left',false,820);txt(x,'(1)　実車率　＝',310,1592,14,'left');txt(x,'実車キロ',520,1580,14,'center');line(x,470,1596,570,1596,1);txt(x,'走行キロ',520,1612,14,'center');txt(x,'×　100',610,1592,14,'left');txt(x,'(2)　実働車１日１車あたり営業収入　＝',310,1650,14,'left');txt(x,'営業収入',760,1638,14,'center');line(x,705,1654,815,1654,1);txt(x,'実働日数',760,1670,14,'center');return c}
+function transportCanvas(y,m){const W=1240,H=1754,[c,x]=make(W,H),L=36,R=1204;const arr=recordsFor(y,m),t=totals(arr),a=averages(arr);txt(x,'日別輸送実績表',W/2,50,42,'center',true);line(x,W/2-210,81,W/2+210,81,2);txt(x,`${y}　年　${m}　月分`,W/2,115,24,'center');line(x,W/2-165,139,W/2+165,139,1.6);txt(x,`${state.settings.cityName||''}　市.No　${state.settings.memberNo||''}`,1120,115,18,'right',false,300);txt(x,`車種　${state.settings.vehicleType||''}　年式　${state.settings.modelYear||''}　番号　${state.settings.plateNo||''}`,70,174,18,'left',false,620);txt(x,`氏名　${state.settings.name||''}`,760,174,20,'left',false,360);
+const cols=[L,84,176,268,328,388,500,570,635,710,785,842,900,1010,1168];const top=205,hh=50,rh=36;
+const heads=['日付','走行粁','実車粁','回数','人員','収入','燃料','ｵｲﾙ','粁収','実車率','障割回','人数','割引額','備考'];
+for(let i=0;i<heads.length;i++){rect(x,cols[i],top,cols[i+1]-cols[i],hh,1.5);cellTxt(x,heads[i],cols[i],top,cols[i+1]-cols[i],hh,15,'center',true)}
+for(let i=0;i<31;i++){const d=i+1,y0=top+hh+i*rh;for(let j=0;j<heads.length;j++)rect(x,cols[j],y0,cols[j+1]-cols[j],rh,1);const r=arr[i]||{day:d};cellTxt(x,d<=daysInMonth(y,m)?d:'',cols[0],y0,cols[1]-cols[0],rh,15);if(d<=daysInMonth(y,m)){const remarkText=String(r.remarks||'').trim();const vals=[fmtNum(r.runKm),fmtNum(r.actualKm),r.trips||'',r.persons||'',num(r.income)?money(r.income):'',fmtNum(r.fuel),fmtNum(r.oil),roundVal(kmRevenue(r)),roundVal(actualRate(r))?roundVal(actualRate(r))+'%':'',r.discTrips||'',r.discPersons||'',num(r.discAmount)?money(r.discAmount):'',remarkText];for(let k=0;k<vals.length;k++){if(k===12&&remarkText.includes('休車')){txt(x,vals[k],cols[k+1]+6,y0+rh/2,13,'left',false,cols[k+2]-cols[k+1]-8,'#d92d20')}else{cellTxt(x,vals[k],cols[k+1],y0,cols[k+2]-cols[k+1],rh,k===12?13:15,k===12?'left':'center')}}if(remarkText.includes('休車')){line(x,cols[1]+4,y0+rh/2,cols[13]-4,y0+rh/2,4,'#d92d20')}}}
+const sumY=top+hh+31*rh;['合計','平均'].forEach((label,row)=>{const y0=sumY+row*rh;for(let j=0;j<heads.length;j++)rect(x,cols[j],y0,cols[j+1]-cols[j],rh,1.5);cellTxt(x,label,cols[0],y0,cols[1]-cols[0],rh,16,'center',true);const src=row===0?t:a;const vals=[fmtNum(src.runKm),fmtNum(src.actualKm),fmtInt(src.trips),fmtInt(src.persons),num(src.income)?money(src.income):'',fmtNum(src.fuel),fmtNum(src.oil),roundVal(src.kmRevenue),roundVal(src.actualRate)?roundVal(src.actualRate)+'%':'',fmtInt(src.discTrips),fmtInt(src.discPersons),num(src.discAmount)?money(src.discAmount):'',''];for(let k=0;k<vals.length;k++){cellTxt(x,vals[k],cols[k+1],y0,cols[k+2]-cols[k+1],rh,15,k===12?'left':'center')}})
+const by=sumY+rh*2+36;txt(x,`実働日数　${t.workDays}日`,70,by,18);txt(x,`月実働率　${daysInMonth(y,m)?roundVal(t.workDays/daysInMonth(y,m)*100):''}%`,260,by,18);txt(x,`燃費　${num(t.fuel)>0?roundVal(t.runKm/t.fuel):''}`,520,by,18);return c}
+function jpeg(c){const b=atob(c.toDataURL('image/jpeg',.94).split(',')[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+function pdf(canvases,size){
+  const enc=new TextEncoder(),chunks=[];let len=0;const offs=[0];
+  const push=v=>{if(typeof v==='string')v=enc.encode(v);chunks.push(v);len+=v.length};
+  const obj=(body)=>{offs.push(len);push(`${offs.length-1} 0 obj\n`);push(body);push('\nendobj\n')};
+  const streamObj=(dict,data)=>{offs.push(len);push(`${offs.length-1} 0 obj\n`);push(`${dict} /Length ${data.length} >>\nstream\n`);push(data);push('\nendstream\nendobj\n')};
+  push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  const pageIds=[],imgIds=[],contentIds=[];
+  canvases.forEach(()=>{pageIds.push(0);imgIds.push(0);contentIds.push(0)});
+  obj('<< /Type /Catalog /Pages 2 0 R >>');
+  const pagesObjIndex=2;
+  // reserve pages object later by creating after ids known is hard with this simple writer, so create all page/image/content first then patch via string.
+  const pageObjBodies=[];
+  canvases.forEach((c,i)=>{
+    const [pw,ph]=size;
+    const j=jpeg(c);
+    const imgId=offs.length;
+    streamObj(`<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`,j);
+    const content=`q ${pw} 0 0 ${ph} 0 0 cm /Im${i} Do Q`;
+    const contentId=offs.length;
+    streamObj('<<',enc.encode(content));
+    const pageId=offs.length;
+    obj(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im${i} ${imgId} 0 R >> >> /Contents ${contentId} 0 R >>`);
+    pageIds[i]=pageId;imgIds[i]=imgId;contentIds[i]=contentId;
+  });
+  // Insert pages object cannot be inserted after. Rebuild with proper order using a second pass:
+  const kids=pageIds.map(i=>`${i} 0 R`).join(' ');
+  // This writer created catalog as obj 1, then page/image/content as obj 2... so page parent points to obj 2, but obj 2 is image. Rebuild fully:
+  chunks.length=0;len=0;offs.length=0;offs.push(0);push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  obj('<< /Type /Catalog /Pages 2 0 R >>');
+  obj(`<< /Type /Pages /Count ${canvases.length} /Kids [${canvases.map((_,i)=>3+i*3+' 0 R').join(' ')}] >>`);
+  canvases.forEach((c,i)=>{
+    const [pw,ph]=size,pageId=3+i*3,imgId=pageId+1,contentId=pageId+2;
+    obj(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im${i} ${imgId} 0 R >> >> /Contents ${contentId} 0 R >>`);
+    const j=jpeg(c);
+    streamObj(`<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`,j);
+    const content=`q ${pw} 0 0 ${ph} 0 0 cm /Im${i} Do Q`;
+    streamObj('<<',enc.encode(content));
+  });
+  const xr=len;push(`xref\n0 ${offs.length}\n0000000000 65535 f \n`);
+  for(let i=1;i<offs.length;i++)push(String(offs[i]).padStart(10,'0')+' 00000 n \n');
+  push(`trailer\n<< /Size ${offs.length} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`);
+  const out=new Uint8Array(len);let pos=0;chunks.forEach(v=>{out.set(v,pos);pos+=v.length});
+  return new Blob([out],{type:'application/pdf'});
+}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+$('pdfBtn').onclick=()=>{const y=num($('pdfYear').value)||nowY(),m=num($('pdfMonth').value)||nowM();dl(pdf([transportCanvas(y,m)],[595.28,841.89]),`日別輸送実績_${y}年${m}月.pdf`);backupGuideMonthly()};
+$('mailBtn').onclick=()=>{const y=num($('pdfYear').value)||nowY(),m=num($('pdfMonth').value)||nowM(),to=encodeURIComponent(state.settings.mailTo||''),sub=encodeURIComponent(`日別輸送実績 ${y}年${m}月`),body=encodeURIComponent(`日別輸送実績PDFを添付して送信します。\n\n氏名：${state.settings.name||''}\n市名：${state.settings.cityName||''}\nNo：${state.settings.memberNo||''}\n対象：${y}年${m}月\n\n※PDFを添付してから送信してください。`);location.href=`mailto:${to}?subject=${sub}&body=${body}`};
+$('annualPdfBtn').onclick=()=>{const ey=num($('annualEndYear').value)||(nowM()<=3?nowY():nowY()+1);dl(pdf([annualReportCanvas(ey)],[595.28,841.89]),`輸送実績報告書_${ey-1}年度.pdf`);backupGuideAnnual()};
+$('annualMailBtn').onclick=()=>{const ey=num($('annualEndYear').value)||(nowM()<=3?nowY():nowY()+1),to=encodeURIComponent(state.settings.mailTo||''),sub=encodeURIComponent(`輸送実績報告書 ${ey-1}年度`),body=encodeURIComponent(`輸送実績報告書PDFを添付して送信します。\n\n氏名：${state.settings.reportName||state.settings.name||''}\n対象：${ey-1}年4月1日～${ey}年3月31日\n\n※PDFを添付してから送信してください。`);location.href=`mailto:${to}?subject=${sub}&body=${body}`};
+$('backupBtn').onclick=()=>dl(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),'日別輸送実績バックアップ.json');
+$('restoreInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const x=JSON.parse(rd.result);if(!x.records)throw new Error();state={...state,...x,settings:{...state.settings,...(x.settings||{})},records:x.records||{}};save();alert('復元しました。');renderSettings();renderList();renderPdf()}catch(err){alert('復元できませんでした。')}};rd.readAsText(f)};
+setDefaults();renderSettings();renderPdf();updatePreview();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+</script>
+</body></html>
