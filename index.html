@@ -255,9 +255,19 @@ function pdf(canvases,size){
 }
 function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
 $('pdfBtn').onclick=()=>{const y=num($('pdfYear').value)||nowY(),m=num($('pdfMonth').value)||nowM();dl(pdf([transportCanvas(y,m)],[595.28,841.89]),`日別輸送実績_${y}年${m}月.pdf`);backupGuideMonthly()};
-$('mailBtn').onclick=()=>{const y=num($('pdfYear').value)||nowY(),m=num($('pdfMonth').value)||nowM(),to=encodeURIComponent(state.settings.mailTo||DEFAULT_MAIL),sub=encodeURIComponent(`日別輸送実績 ${y}年${m}月`),body=encodeURIComponent(`日別輸送実績PDFを添付して送信します。\n\n氏名：${state.settings.name||''}\n市名：${state.settings.cityName||''}\nNo：${state.settings.memberNo||''}\n対象：${y}年${m}月\n\n※PDFを添付してから送信してください。`);location.href=`mailto:${to}?subject=${sub}&body=${body}`};
+function openAddressedMail(recipient,subject,message){
+ const to=String(recipient||'').trim();
+ if(!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(to)){
+  alert('担当者メールアドレスが正しくありません。設定画面で確認してください。');showSec('settings');return;
+ }
+ // @ は %40 に変換せず、mailto: の宛先部分に明示する。
+ const link=document.createElement('a');
+ link.href='mailto:'+to+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(message);
+ link.style.display='none';document.body.appendChild(link);link.click();link.remove();
+}
+$('mailBtn').onclick=()=>{const y=num($('pdfYear').value)||nowY(),m=num($('pdfMonth').value)||nowM();openAddressedMail(state.settings.mailTo||DEFAULT_MAIL,`日別輸送実績 ${y}年${m}月`,`日別輸送実績PDFを添付して送信します。\n\n氏名：${state.settings.name||''}\n市名：${state.settings.cityName||''}\nNo：${state.settings.memberNo||''}\n対象：${y}年${m}月\n\n※PDFを添付してから送信してください。`)};
 $('annualPdfBtn').onclick=()=>{const ey=num($('annualEndYear').value)||(nowM()<=3?nowY():nowY()+1);dl(pdf([annualReportCanvas(ey)],[595.28,841.89]),`輸送実績報告書_${ey-1}年度.pdf`);backupGuideAnnual()};
-$('annualMailBtn').onclick=()=>{const ey=num($('annualEndYear').value)||(nowM()<=3?nowY():nowY()+1),to=encodeURIComponent(state.settings.mailTo||DEFAULT_MAIL),sub=encodeURIComponent(`輸送実績報告書 ${ey-1}年度`),body=encodeURIComponent(`輸送実績報告書PDFを添付して送信します。\n\n氏名：${state.settings.reportName||state.settings.name||''}\n対象：${ey-1}年4月1日～${ey}年3月31日\n\n※PDFを添付してから送信してください。`);location.href=`mailto:${to}?subject=${sub}&body=${body}`};
+$('annualMailBtn').onclick=()=>{const ey=num($('annualEndYear').value)||(nowM()<=3?nowY():nowY()+1);openAddressedMail(state.settings.mailTo||DEFAULT_MAIL,`輸送実績報告書 ${ey-1}年度`,`輸送実績報告書PDFを添付して送信します。\n\n氏名：${state.settings.reportName||state.settings.name||''}\n対象：${ey-1}年4月1日～${ey}年3月31日\n\n※PDFを添付してから送信してください。`)};
 $('backupBtn').onclick=()=>dl(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),'日別輸送実績バックアップ.json');
 $('restoreInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const x=JSON.parse(rd.result);if(!x.records)throw new Error();state={...state,...x,settings:{...state.settings,...(x.settings||{})},records:x.records||{}};ensureDefaultMail();save();alert('復元しました。');renderSettings();renderList();renderPdf()}catch(err){alert('復元できませんでした。')}};rd.readAsText(f)};
 setDefaults();renderSettings();renderPdf();updatePreview();
